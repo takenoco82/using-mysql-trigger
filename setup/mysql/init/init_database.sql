@@ -76,12 +76,21 @@ END$$
 USE `sandbox`$$
 CREATE DEFINER = CURRENT_USER TRIGGER `sandbox`.`users_AFTER_UPDATE` AFTER UPDATE ON `users` FOR EACH ROW
 BEGIN
-  SET @json = CONCAT(
-    "{",
-    "\"user_id\":", NEW.user_id, ",",
-    "\"user_name\":", "\"", NEW.user_name, "\"", ",",
-    "\"company_id\":", "\"", NEW.company_id, "\"",
-    "}");
+  IF (NEW.is_deleted = 1) THEN
+    SET @json = CONCAT(
+      "{",
+      "\"user_id\":", OLD.user_id, ",",
+      "\"user_name\":", "\"", OLD.user_name, "\"", ",",
+      "\"company_id\":", "\"", OLD.company_id, "\"",
+      "}");
+  ELSE
+    SET @json = CONCAT(
+      "{",
+      "\"user_id\":", NEW.user_id, ",",
+      "\"user_name\":", "\"", NEW.user_name, "\"", ",",
+      "\"company_id\":", "\"", NEW.company_id, "\"",
+      "}");
+  END IF;
   INSERT INTO `actions` (`action_type`, `data`, `acted_at`, `acted_by`) VALUES (NEW.operation, @json, NEW.updated_at, NEW.updated_by);
 END$$
 
@@ -94,6 +103,7 @@ DELIMITER ;
 START TRANSACTION;
 USE `sandbox`;
 INSERT INTO `sandbox`.`companies` (`company_id`, `company_name`) VALUES (1, '企業名1');
+INSERT INTO `sandbox`.`companies` (`company_id`, `company_name`) VALUES (2, '企業名2');
 
 COMMIT;
 
@@ -105,7 +115,7 @@ START TRANSACTION;
 USE `sandbox`;
 INSERT INTO `sandbox`.`users` (`user_id`, `user_name`, `company_id`, `is_deleted`, `updated_at`, `updated_by`, `operation`) VALUES (1, 'ユーザ名1', 1, 0, '2018-10-20 12:34:56', 'ユーザ名1', 'createUser');
 INSERT INTO `sandbox`.`users` (`user_id`, `user_name`, `company_id`, `is_deleted`, `updated_at`, `updated_by`, `operation`) VALUES (2, 'ユーザ名2', 1, 0, '2018-10-20 12:34:56', 'ユーザ名1', 'createUser');
-INSERT INTO `sandbox`.`users` (`user_id`, `user_name`, `company_id`, `is_deleted`, `updated_at`, `updated_by`, `operation`) VALUES (3, 'ユーザ名3', 1, 0, '2018-10-20 12:34:56', 'ユーザ名1', 'createUser');
+INSERT INTO `sandbox`.`users` (`user_id`, `user_name`, `company_id`, `is_deleted`, `updated_at`, `updated_by`, `operation`) VALUES (3, 'ユーザ名3', 2, 0, '2018-10-20 12:34:56', 'ユーザ名1', 'createUser');
 
 COMMIT;
 
