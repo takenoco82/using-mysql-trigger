@@ -67,7 +67,8 @@ BEGIN
   SET @json = CONCAT(
     "{",
     "\"user_id\":", NEW.user_id, ",",
-    "\"user_name\":", "\"", NEW.user_name, "\"",
+    "\"user_name\":", "\"", NEW.user_name, "\"", ",",
+    "\"company_id\":", "\"", NEW.company_id, "\"",
     "}");
   INSERT INTO `actions` (`action_type`, `data`, `acted_at`, `acted_by`) VALUES (NEW.operation, @json, NEW.updated_at, NEW.updated_by);
 END$$
@@ -78,7 +79,8 @@ BEGIN
   SET @json = CONCAT(
     "{",
     "\"user_id\":", NEW.user_id, ",",
-    "\"user_name\":", "\"", NEW.user_name, "\"",
+    "\"user_name\":", "\"", NEW.user_name, "\"", ",",
+    "\"company_id\":", "\"", NEW.company_id, "\"",
     "}");
   INSERT INTO `actions` (`action_type`, `data`, `acted_at`, `acted_by`) VALUES (NEW.operation, @json, NEW.updated_at, NEW.updated_by);
 END$$
