@@ -72,6 +72,17 @@ BEGIN
   INSERT INTO `actions` (`action_type`, `data`, `acted_at`, `acted_by`) VALUES (NEW.operation, @json, NEW.updated_at, NEW.updated_by);
 END$$
 
+USE `sandbox`$$
+CREATE DEFINER = CURRENT_USER TRIGGER `sandbox`.`users_AFTER_UPDATE` AFTER UPDATE ON `users` FOR EACH ROW
+BEGIN
+  SET @json = CONCAT(
+    "{",
+    "\"user_id\":", NEW.user_id, ",",
+    "\"user_name\":", "\"", NEW.user_name, "\"",
+    "}");
+  INSERT INTO `actions` (`action_type`, `data`, `acted_at`, `acted_by`) VALUES (NEW.operation, @json, NEW.updated_at, NEW.updated_by);
+END$$
+
 
 DELIMITER ;
 
