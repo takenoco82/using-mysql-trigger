@@ -47,6 +47,19 @@ ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
+-- Table `sandbox`.`actions`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `sandbox`.`actions` (
+  `action_id` INT NOT NULL AUTO_INCREMENT,
+  `action_type` VARCHAR(45) NULL,
+  `data` JSON NULL,
+  `acted_at` DATETIME NULL,
+  `acted_by` VARCHAR(45) NULL,
+  PRIMARY KEY (`action_id`))
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
 -- Data for table `sandbox`.`companies`
 -- -----------------------------------------------------
 START TRANSACTION;
