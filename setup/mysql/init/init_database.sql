@@ -32,7 +32,6 @@ CREATE TABLE IF NOT EXISTS `sandbox`.`users` (
   `user_id` INT NOT NULL AUTO_INCREMENT,
   `user_name` VARCHAR(45) NOT NULL,
   `company_id` INT NOT NULL,
-  `is_deleted` INT NULL DEFAULT 0,
   `updated_at` DATETIME NULL,
   `updated_by` VARCHAR(45) NULL,
   `operation` VARCHAR(45) NULL,
@@ -58,40 +57,44 @@ CREATE TABLE IF NOT EXISTS `sandbox`.`actions` (
   PRIMARY KEY (`action_id`))
 ENGINE = InnoDB;
 
+
+-- -----------------------------------------------------
+-- Table `sandbox`.`deleted_companies`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `sandbox`.`deleted_companies` (
+  `company_id` INT NOT NULL AUTO_INCREMENT,
+  `company_name` VARCHAR(45) NULL,
+  PRIMARY KEY (`company_id`))
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `sandbox`.`deleted_users`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `sandbox`.`deleted_users` (
+  `user_id` INT NOT NULL AUTO_INCREMENT,
+  `user_name` VARCHAR(45) NOT NULL,
+  `company_id` INT NOT NULL,
+  `updated_at` DATETIME NULL,
+  `updated_by` VARCHAR(45) NULL,
+  `operation` VARCHAR(45) NULL,
+  PRIMARY KEY (`user_id`))
+ENGINE = InnoDB;
+
 USE `sandbox`;
 
 DELIMITER $$
 USE `sandbox`$$
-CREATE DEFINER = CURRENT_USER TRIGGER `sandbox`.`users_AFTER_INSERT` AFTER INSERT ON `users` FOR EACH ROW
+CREATE DEFINER = CURRENT_USER TRIGGER `sandbox`.`companies_BEFORE_DELETE` BEFORE DELETE ON `companies` FOR EACH ROW
 BEGIN
-  SET @json = CONCAT(
-    "{",
-    "\"user_id\":", NEW.user_id, ",",
-    "\"user_name\":", "\"", NEW.user_name, "\"", ",",
-    "\"company_id\":", "\"", NEW.company_id, "\"",
-    "}");
-  INSERT INTO `actions` (`action_type`, `data`, `acted_at`, `acted_by`) VALUES (NEW.operation, @json, NEW.updated_at, NEW.updated_by);
+  INSERT INTO `deleted_companies` SELECT * FROM `companies` WHERE company_id = OLD.company_id;
+  DELETE FROM `users` WHERE company_id = OLD.company_id;
 END$$
 
 USE `sandbox`$$
-CREATE DEFINER = CURRENT_USER TRIGGER `sandbox`.`users_AFTER_UPDATE` AFTER UPDATE ON `users` FOR EACH ROW
+CREATE DEFINER = CURRENT_USER TRIGGER `sandbox`.`users_BEFORE_DELETE` BEFORE DELETE ON `users` FOR EACH ROW
 BEGIN
-  IF (NEW.is_deleted = 1) THEN
-    SET @json = CONCAT(
-      "{",
-      "\"user_id\":", OLD.user_id, ",",
-      "\"user_name\":", "\"", OLD.user_name, "\"", ",",
-      "\"company_id\":", "\"", OLD.company_id, "\"",
-      "}");
-  ELSE
-    SET @json = CONCAT(
-      "{",
-      "\"user_id\":", NEW.user_id, ",",
-      "\"user_name\":", "\"", NEW.user_name, "\"", ",",
-      "\"company_id\":", "\"", NEW.company_id, "\"",
-      "}");
-  END IF;
-  INSERT INTO `actions` (`action_type`, `data`, `acted_at`, `acted_by`) VALUES (NEW.operation, @json, NEW.updated_at, NEW.updated_by);
+  INSERT INTO `deleted_users` SELECT * from `users` WHERE user_id = OLD.user_id;
 END$$
 
 
@@ -113,9 +116,9 @@ COMMIT;
 -- -----------------------------------------------------
 START TRANSACTION;
 USE `sandbox`;
-INSERT INTO `sandbox`.`users` (`user_id`, `user_name`, `company_id`, `is_deleted`, `updated_at`, `updated_by`, `operation`) VALUES (1, 'ユーザ名1', 1, 0, '2018-10-20 12:34:56', 'ユーザ名1', 'createUser');
-INSERT INTO `sandbox`.`users` (`user_id`, `user_name`, `company_id`, `is_deleted`, `updated_at`, `updated_by`, `operation`) VALUES (2, 'ユーザ名2', 1, 0, '2018-10-20 12:34:56', 'ユーザ名1', 'createUser');
-INSERT INTO `sandbox`.`users` (`user_id`, `user_name`, `company_id`, `is_deleted`, `updated_at`, `updated_by`, `operation`) VALUES (3, 'ユーザ名3', 2, 0, '2018-10-20 12:34:56', 'ユーザ名1', 'createUser');
+INSERT INTO `sandbox`.`users` (`user_id`, `user_name`, `company_id`, `updated_at`, `updated_by`, `operation`) VALUES (1, 'ユーザ名1', 1, '2018-10-20 12:34:56', 'ユーザ名1', 'createUser');
+INSERT INTO `sandbox`.`users` (`user_id`, `user_name`, `company_id`, `updated_at`, `updated_by`, `operation`) VALUES (2, 'ユーザ名2', 1, '2018-10-20 12:34:56', 'ユーザ名1', 'createUser');
+INSERT INTO `sandbox`.`users` (`user_id`, `user_name`, `company_id`, `updated_at`, `updated_by`, `operation`) VALUES (3, 'ユーザ名3', 2, '2018-10-20 12:34:56', 'ユーザ名1', 'createUser');
 
 COMMIT;
 
